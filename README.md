@@ -49,9 +49,42 @@ Los datos del evento están en `src/App.jsx` dentro de `eventDetails`.
 5. Publica las reglas de `firestore.rules`.
 6. En Firestore crea manualmente un documento en `admins/<UID>` para cada administrador autorizado.
 
+### Modelo de permisos
+
+- Cualquier visitante puede crear invitados y ver la lista.
+- Solo un administrador puede editar o eliminar invitados.
+- Un administrador es cualquier usuario autenticado cuyo `uid` tenga un documento en `admins/<UID>`.
+
+### Como crear un admin real
+
+1. Abre la app y entra con Google o Facebook.
+2. Copia tu `uid` desde Firebase Console > Authentication > Users.
+3. Ve a Firestore Database.
+4. Crea la coleccion `admins` si no existe.
+5. Crea un documento con id igual a tu `uid`.
+6. Puedes guardar un contenido simple como:
+
+```json
+{
+  "role": "admin",
+  "enabled": true
+}
+```
+
+### Variables de entorno necesarias
+
+```bash
+VITE_FIREBASE_API_KEY=
+VITE_FIREBASE_AUTH_DOMAIN=
+VITE_FIREBASE_PROJECT_ID=
+VITE_FIREBASE_STORAGE_BUCKET=
+VITE_FIREBASE_MESSAGING_SENDER_ID=
+VITE_FIREBASE_APP_ID=
+```
+
 La app usa:
 
 - React en el frontend
 - Firebase Auth para Google/Facebook
 - Firestore como base de datos de invitados
-- reglas para que solo usuarios autorizados administren invitados
+- reglas para que solo usuarios autorizados administren edicion y borrado

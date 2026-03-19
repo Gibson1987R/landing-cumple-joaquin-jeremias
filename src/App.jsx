@@ -109,7 +109,7 @@ function App() {
   const [editingId, setEditingId] = useState(null)
   const [selectedPhotoId, setSelectedPhotoId] = useState(birthdayPhotos[0].id)
   const [statusMessage, setStatusMessage] = useState(
-    'Inicia sesion con Google o Facebook para administrar la lista de invitados.',
+    'Completa el formulario para registrar a tu invitado. Solo el administrador puede editar o eliminar registros.',
   )
   const [currentUser, setCurrentUser] = useState(null)
   const [isAdmin, setIsAdmin] = useState(false)
@@ -184,9 +184,9 @@ function App() {
   const handleSubmit = async (event) => {
     event.preventDefault()
 
-    if (!firebaseReady || !db || !isAdmin) {
+    if (!firebaseReady || !db) {
       setStatusMessage(
-        'Necesitas iniciar sesion como administrador para crear o editar invitados.',
+        'Falta configurar Firebase para guardar invitados correctamente.',
       )
       return
     }
@@ -201,6 +201,13 @@ function App() {
     }
 
     if (editingId !== null) {
+      if (!isAdmin) {
+        setStatusMessage(
+          'Solo el administrador puede editar registros existentes.',
+        )
+        return
+      }
+
       await updateDoc(doc(db, 'guests', editingId), {
         ...normalizedForm,
         updatedAt: serverTimestamp(),
@@ -299,7 +306,8 @@ function App() {
           <p className="hero-text">
             Celebra sus {eventDetails.age} anos con una aventura inspirada en
             Spidey y sus amigos, con una invitacion pensada para compartir sus
-            mejores fotos y organizar la celebracion con claridad.
+            mejores fotos y permitir que cada familia confirme su asistencia con
+            claridad.
           </p>
 
           <div className="hero-badges" aria-label="Resumen del evento">
@@ -331,7 +339,7 @@ function App() {
                     ? isAdmin
                       ? `Sesion activa como ${currentUser.email}.`
                       : `Sesion activa como ${currentUser.email}, pero sin permisos de administrador.`
-                    : 'Inicia sesion con Google o Facebook para administrar invitados.'}
+                    : 'Los invitados pueden registrarse sin iniciar sesion. Google o Facebook solo se usan para administracion.'}
               </span>
             </div>
 
@@ -386,7 +394,6 @@ function App() {
                   placeholder="Ej. Tomas"
                   autoComplete="given-name"
                   required
-                  disabled={!isAdmin}
                 />
               </label>
 
@@ -399,7 +406,6 @@ function App() {
                   placeholder="Ej. Martinez"
                   autoComplete="family-name"
                   required
-                  disabled={!isAdmin}
                 />
               </label>
 
@@ -412,7 +418,6 @@ function App() {
                   placeholder="Ej. Laura"
                   autoComplete="name"
                   required
-                  disabled={!isAdmin}
                 />
               </label>
 
@@ -425,12 +430,11 @@ function App() {
                   placeholder="Ej. Gomez"
                   autoComplete="family-name"
                   required
-                  disabled={!isAdmin}
                 />
               </label>
 
               <div className="form-actions">
-                <button type="submit" disabled={!isAdmin}>
+                <button type="submit">
                   {editingId !== null ? 'Guardar cambios' : 'Guardar invitado'}
                 </button>
                 {editingId !== null ? (
@@ -512,7 +516,7 @@ function App() {
             <p>
               {loadingGuests
                 ? 'Cargando invitados confirmados...'
-                : 'Los invitados pueden ver esta lista, pero solo el administrador puede hacer cambios.'}
+                : 'Los invitados pueden registrarse y ver esta lista. Solo el administrador puede editar o eliminar registros.'}
             </p>
           </div>
 
@@ -590,6 +594,10 @@ function App() {
             <article>
               <strong>Tema</strong>
               <span>Spidey y sus amigos con fotos del cumpleanero</span>
+            </article>
+            <article>
+              <strong>Registro</strong>
+              <span>Abierto para invitados; administracion protegida</span>
             </article>
           </div>
         </article>
