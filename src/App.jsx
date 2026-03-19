@@ -1,12 +1,49 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  onSnapshot,
+  orderBy,
+  query,
+  serverTimestamp,
+  updateDoc,
+} from 'firebase/firestore'
+import {
+  onAuthStateChanged,
+  signInWithPopup,
+  signOut,
+} from 'firebase/auth'
+import { auth, db, facebookProvider, firebaseReady, googleProvider } from './firebase'
 
 const eventDetails = {
   honoree: 'Joaquin Jeremias Rosales Perez',
   age: 4,
-  date: 'Sabado 23 de mayo de 2026',
+  date: 'Sabado 25 de abril de 2026',
   time: '3:00 p. m.',
-  place: 'En nuestro Salon de Clases, Fiestas y Aventuras; en el Centro Educativo Aprendo Jugando',
+  place:
+    'En nuestro Salon de Clases, Fiestas y Aventuras; en el Centro Educativo Aprendo Jugando',
 }
+
+const spideyStickers = [
+  {
+    id: 1,
+    src: 'https://image.tmdb.org/t/p/original/vzeSGXStZVZpSZV5p9Hy39r8x3o.jpg',
+    label: 'Mision pastel',
+  },
+  {
+    id: 2,
+    src: 'https://image.tmdb.org/t/p/original/yoyKcHIlTk00SFxbx7N4vWpWQHx.jpg',
+    label: 'Equipo arana',
+  },
+  {
+    id: 3,
+    src: 'https://image.tmdb.org/t/p/original/30gQXSUuLWJ4VvuRCmWvFfQNh8U.jpg',
+    label: 'Aventura en accion',
+  },
+]
 
 const birthdayPhotos = [
   {
@@ -66,35 +103,70 @@ const emptyForm = {
   parentLastName: '',
 }
 
-const initialGuests = [
-  {
-    id: 1,
-    childName: 'Mateo',
-    childLastName: 'Lopez',
-    parentName: 'Carla',
-    parentLastName: 'Lopez',
-  },
-  {
-    id: 2,
-    childName: 'Sofia',
-    childLastName: 'Ramirez',
-    parentName: 'Andres',
-    parentLastName: 'Ramirez',
-  },
-]
-
 function App() {
   const [form, setForm] = useState(emptyForm)
-  const [guests, setGuests] = useState(initialGuests)
+  const [guests, setGuests] = useState([])
   const [editingId, setEditingId] = useState(null)
   const [selectedPhotoId, setSelectedPhotoId] = useState(birthdayPhotos[0].id)
   const [statusMessage, setStatusMessage] = useState(
-    'Completa los datos para registrar a un pequeno heroe.',
+    'Inicia sesion con Google o Facebook para administrar la lista de invitados.',
   )
+  const [currentUser, setCurrentUser] = useState(null)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [loadingGuests, setLoadingGuests] = useState(firebaseReady)
 
   const totalGuests = guests.length
   const selectedPhoto =
     birthdayPhotos.find((photo) => photo.id === selectedPhotoId) ?? birthdayPhotos[0]
+
+  useEffect(() => {
+    if (!firebaseReady || !auth) {
+      return undefined
+    }
+
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setCurrentUser(user)
+
+      if (!user || !db) {
+        setIsAdmin(false)
+        return
+      }
+
+      const adminSnapshot = await getDoc(doc(db, 'admins', user.uid))
+      setIsAdmin(adminSnapshot.exists())
+    })
+
+    return unsubscribe
+  }, [])
+
+  useEffect(() => {
+    if (!firebaseReady || !db) {
+      setLoadingGuests(false)
+      return undefined
+    }
+
+    const guestsQuery = query(collection(db, 'guests'), orderBy('createdAt', 'desc'))
+    const unsubscribe = onSnapshot(
+      guestsQuery,
+      (snapshot) => {
+        setGuests(
+          snapshot.docs.map((guestDoc) => ({
+            id: guestDoc.id,
+            ...guestDoc.data(),
+          })),
+        )
+        setLoadingGuests(false)
+      },
+      () => {
+        setLoadingGuests(false)
+        setStatusMessage(
+          'No se pudo cargar la lista. Revisa la configuracion de Firebase y las reglas.',
+        )
+      },
+    )
+
+    return unsubscribe
+  }, [])
 
   const handleChange = (event) => {
     const { name, value } = event.target
@@ -109,8 +181,15 @@ function App() {
     setEditingId(null)
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
+
+    if (!firebaseReady || !db || !isAdmin) {
+      setStatusMessage(
+        'Necesitas iniciar sesion como administrador para crear o editar invitados.',
+      )
+      return
+    }
 
     const normalizedForm = Object.fromEntries(
       Object.entries(form).map(([key, value]) => [key, value.trim()]),
@@ -122,22 +201,19 @@ function App() {
     }
 
     if (editingId !== null) {
-      setGuests((current) =>
-        current.map((guest) =>
-          guest.id === editingId ? { ...guest, ...normalizedForm } : guest,
-        ),
-      )
+      await updateDoc(doc(db, 'guests', editingId), {
+        ...normalizedForm,
+        updatedAt: serverTimestamp(),
+      })
       setStatusMessage(
         `${normalizedForm.childName} ${normalizedForm.childLastName} fue actualizado correctamente.`,
       )
     } else {
-      setGuests((current) => [
-        {
-          id: Date.now(),
-          ...normalizedForm,
-        },
-        ...current,
-      ])
+      await addDoc(collection(db, 'guests'), {
+        ...normalizedForm,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      })
       setStatusMessage(
         `${normalizedForm.childName} ${normalizedForm.childLastName} quedo confirmado para la fiesta.`,
       )
@@ -147,21 +223,29 @@ function App() {
   }
 
   const handleEdit = (guest) => {
+    if (!isAdmin) {
+      return
+    }
+
     setEditingId(guest.id)
     setForm({
-      childName: guest.childName,
-      childLastName: guest.childLastName,
-      parentName: guest.parentName,
-      parentLastName: guest.parentLastName,
+      childName: guest.childName ?? '',
+      childLastName: guest.childLastName ?? '',
+      parentName: guest.parentName ?? '',
+      parentLastName: guest.parentLastName ?? '',
     })
     setStatusMessage(
       `Editando a ${guest.childName} ${guest.childLastName}. Ajusta los datos y guarda.`,
     )
   }
 
-  const handleDelete = (guestId) => {
+  const handleDelete = async (guestId) => {
+    if (!firebaseReady || !db || !isAdmin) {
+      return
+    }
+
     const guestToDelete = guests.find((guest) => guest.id === guestId)
-    setGuests((current) => current.filter((guest) => guest.id !== guestId))
+    await deleteDoc(doc(db, 'guests', guestId))
 
     if (editingId === guestId) {
       resetForm()
@@ -172,6 +256,33 @@ function App() {
         `${guestToDelete.childName} ${guestToDelete.childLastName} fue eliminado de la lista.`,
       )
     }
+  }
+
+  const signIn = async (provider) => {
+    if (!auth) {
+      return
+    }
+
+    try {
+      await signInWithPopup(auth, provider)
+      setStatusMessage(
+        'Sesion iniciada. Si tu usuario esta en la coleccion admins, ya puedes administrar invitados.',
+      )
+    } catch {
+      setStatusMessage('No se pudo iniciar sesion. Revisa la configuracion del proveedor.')
+    }
+  }
+
+  const handleSignOut = async () => {
+    if (!auth) {
+      return
+    }
+
+    await signOut(auth)
+    setIsAdmin(false)
+    setEditingId(null)
+    setForm(emptyForm)
+    setStatusMessage('Sesion cerrada.')
   }
 
   const whatsappUrl = (guest) => {
@@ -187,8 +298,8 @@ function App() {
           <h1>{eventDetails.honoree}</h1>
           <p className="hero-text">
             Celebra sus {eventDetails.age} anos con una aventura inspirada en
-            Spidey y sus amigos, ahora protagonizada por las mejores fotos del
-            cumpleanero.
+            Spidey y sus amigos, con una invitacion pensada para compartir sus
+            mejores fotos y organizar la celebracion con claridad.
           </p>
 
           <div className="hero-badges" aria-label="Resumen del evento">
@@ -208,6 +319,43 @@ function App() {
               <strong>Confirmados</strong>
               <span>{totalGuests} invitados</span>
             </article>
+          </div>
+
+          <div className="auth-panel">
+            <div className="auth-copy">
+              <strong>Acceso de administradores</strong>
+              <span>
+                {!firebaseReady
+                  ? 'Falta configurar Firebase en las variables de entorno.'
+                  : currentUser
+                    ? isAdmin
+                      ? `Sesion activa como ${currentUser.email}.`
+                      : `Sesion activa como ${currentUser.email}, pero sin permisos de administrador.`
+                    : 'Inicia sesion con Google o Facebook para administrar invitados.'}
+              </span>
+            </div>
+
+            <div className="auth-actions">
+              <button type="button" onClick={() => signIn(googleProvider)}>
+                Entrar con Google
+              </button>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => signIn(facebookProvider)}
+              >
+                Entrar con Facebook
+              </button>
+              {currentUser ? (
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={handleSignOut}
+                >
+                  Cerrar sesion
+                </button>
+              ) : null}
+            </div>
           </div>
 
           <a
@@ -238,6 +386,7 @@ function App() {
                   placeholder="Ej. Tomas"
                   autoComplete="given-name"
                   required
+                  disabled={!isAdmin}
                 />
               </label>
 
@@ -250,6 +399,7 @@ function App() {
                   placeholder="Ej. Martinez"
                   autoComplete="family-name"
                   required
+                  disabled={!isAdmin}
                 />
               </label>
 
@@ -262,6 +412,7 @@ function App() {
                   placeholder="Ej. Laura"
                   autoComplete="name"
                   required
+                  disabled={!isAdmin}
                 />
               </label>
 
@@ -274,11 +425,12 @@ function App() {
                   placeholder="Ej. Gomez"
                   autoComplete="family-name"
                   required
+                  disabled={!isAdmin}
                 />
               </label>
 
               <div className="form-actions">
-                <button type="submit">
+                <button type="submit" disabled={!isAdmin}>
                   {editingId !== null ? 'Guardar cambios' : 'Guardar invitado'}
                 </button>
                 {editingId !== null ? (
@@ -358,8 +510,9 @@ function App() {
             <p className="eyebrow">CRUD de invitados</p>
             <h2>Lista de confirmados</h2>
             <p>
-              Puedes crear, editar, eliminar y compartir cada invitacion desde la
-              misma pantalla.
+              {loadingGuests
+                ? 'Cargando invitados confirmados...'
+                : 'Los invitados pueden ver esta lista, pero solo el administrador puede hacer cambios.'}
             </p>
           </div>
 
@@ -380,31 +533,32 @@ function App() {
                     </span>
                   </div>
                 </div>
-
-                <div className="guest-actions">
-                  <button
-                    className="action-button edit-button"
-                    type="button"
-                    onClick={() => handleEdit(guest)}
-                  >
-                    Editar
-                  </button>
-                  <button
-                    className="action-button delete-button"
-                    type="button"
-                    onClick={() => handleDelete(guest.id)}
-                  >
-                    Eliminar
-                  </button>
-                  <a
-                    className="action-button whatsapp-button"
-                    href={whatsappUrl(guest)}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    WhatsApp
-                  </a>
-                </div>
+                {isAdmin ? (
+                  <div className="guest-actions">
+                    <button
+                      className="action-button edit-button"
+                      type="button"
+                      onClick={() => handleEdit(guest)}
+                    >
+                      Editar
+                    </button>
+                    <button
+                      className="action-button delete-button"
+                      type="button"
+                      onClick={() => handleDelete(guest.id)}
+                    >
+                      Eliminar
+                    </button>
+                    <a
+                      className="action-button whatsapp-button"
+                      href={whatsappUrl(guest)}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      WhatsApp
+                    </a>
+                  </div>
+                ) : null}
               </article>
             ))}
           </div>
@@ -413,10 +567,10 @@ function App() {
         <article className="panel info-panel">
           <div className="panel-heading">
             <p className="eyebrow">Detalles del evento</p>
-            <h2>Todo listo para la fiesta</h2>
+            <h2>Todo listo para la celebracion</h2>
             <p>
-              Usa el formulario de arriba para registrar invitados y aqui revisa
-              rapidamente la informacion general del cumpleanos.
+              Consulta aqui la informacion principal de la fiesta y manten la
+              invitacion clara para cada familia.
             </p>
           </div>
 
@@ -435,29 +589,32 @@ function App() {
             </article>
             <article>
               <strong>Tema</strong>
-              <span>Spidey y sus amigos con galeria del cumpleanero</span>
+              <span>Spidey y sus amigos con fotos del cumpleanero</span>
             </article>
           </div>
         </article>
       </section>
 
-      <section className="panel deploy-panel">
-        <div className="panel-heading">
-          <p className="eyebrow">Despliegue</p>
-          <h2>Lista para publicarse gratis</h2>
+      <footer className="panel celebration-footer">
+        <div className="footer-copy">
+          <p className="eyebrow">Cierre de la invitacion</p>
+          <h2>Una fiesta para recordar, jugar y sonreir en grande</h2>
           <p>
-            El proyecto quedo preparado como una app React con Vite, por lo que
-            se puede subir facilmente a un servicio gratuito.
+            Spidey y sus amigos ponen la energia. Joaquin pone la chispa.
+            Pronto personalizamos este cierre con sus frases favoritas y mas
+            detalles de su personalidad.
           </p>
         </div>
 
-        <ol className="deploy-steps">
-          <li>Instala Node.js en tu equipo si aun no lo tienes.</li>
-          <li>Ejecuta <code>npm install</code> y luego <code>npm run build</code>.</li>
-          <li>Sube el repositorio a GitHub.</li>
-          <li>Importa el repositorio en Vercel y despliega el proyecto.</li>
-        </ol>
-      </section>
+        <div className="sticker-row" aria-label="Stickers tematicos de Spidey">
+          {spideyStickers.map((sticker) => (
+            <article className="sticker-card" key={sticker.id}>
+              <img src={sticker.src} alt={sticker.label} />
+              <span>{sticker.label}</span>
+            </article>
+          ))}
+        </div>
+      </footer>
     </main>
   )
 }

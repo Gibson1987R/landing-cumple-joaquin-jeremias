@@ -192,6 +192,52 @@ img {
   box-shadow: 0 22px 34px rgba(18, 140, 126, 0.28);
 }
 
+.auth-panel {
+  display: grid;
+  gap: 14px;
+  margin-top: 24px;
+  padding: 18px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 16px 28px rgba(16, 48, 95, 0.1);
+}
+
+.auth-copy strong,
+.sticker-card span {
+  display: block;
+  color: #10305f;
+}
+
+.auth-copy span {
+  color: rgba(16, 48, 95, 0.76);
+}
+
+.auth-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.auth-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px;
+  border: 0;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #1873ff, #0b57d0);
+  color: #fff;
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease;
+  box-shadow: 0 14px 24px rgba(16, 48, 95, 0.12);
+}
+
+.auth-actions button:hover {
+  transform: translateY(-2px);
+}
+
 .birthday-gallery {
   position: relative;
   display: grid;
@@ -453,6 +499,15 @@ img {
   transform: translateY(-2px);
 }
 
+button:disabled,
+.action-button:disabled,
+input:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+  box-shadow: none;
+}
+
 .secondary-button {
   background: #eef5ff;
   color: #10305f;
@@ -512,10 +567,6 @@ img {
   background: linear-gradient(135deg, #20b46a, #128c7e);
 }
 
-.deploy-panel {
-  margin-top: 24px;
-}
-
 .event-summary-cards {
   display: grid;
   gap: 14px;
@@ -538,6 +589,50 @@ img {
   color: rgba(16, 48, 95, 0.76);
 }
 
+.celebration-footer {
+  display: grid;
+  grid-template-columns: 1fr 0.95fr;
+  gap: 24px;
+  margin-top: 24px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(232, 244, 255, 0.9));
+}
+
+.footer-copy h2 {
+  margin: 0;
+  font-family: 'Baloo 2', cursive;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 0.95;
+  color: #10305f;
+}
+
+.footer-copy p:last-child {
+  margin-top: 14px;
+  color: rgba(16, 48, 95, 0.8);
+}
+
+.sticker-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+.sticker-card {
+  padding: 12px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 16px 28px rgba(16, 48, 95, 0.12);
+}
+
+.sticker-card img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 18px;
+  margin-bottom: 10px;
+}
+
 .deploy-steps {
   margin: 24px 0 0;
   padding-left: 22px;
@@ -556,7 +651,8 @@ code {
 
 @media (max-width: 1100px) {
   .hero-card,
-  .content-grid {
+  .content-grid,
+  .celebration-footer {
     grid-template-columns: 1fr;
   }
 
@@ -588,7 +684,8 @@ code {
 @media (max-width: 720px) {
   .hero-badges,
   .memories-grid,
-  .thumbnail-strip {
+  .thumbnail-strip,
+  .sticker-row {
     grid-template-columns: 1fr 1fr;
   }
 
@@ -632,7 +729,8 @@ code {
 
   .hero-badges,
   .memories-grid,
-  .thumbnail-strip {
+  .thumbnail-strip,
+  .sticker-row {
     grid-template-columns: 1fr;
   }
 
@@ -656,6 +754,7 @@ code {
   }
 
   .form-actions,
+  .auth-actions,
   .guest-actions {
     flex-direction: column;
   }
