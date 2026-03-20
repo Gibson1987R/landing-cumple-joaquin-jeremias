@@ -45,6 +45,27 @@ const spideyStickers = [
   },
 ]
 
+const sayingsRows = [
+  [
+    'Mio mi Joaquin',
+    'La Guaaaan',
+    'Liht',
+    'El Spider',
+  ],
+  [
+    'La cierra cuerta',
+    'para que',
+    'Tope Tope Ton',
+    'Robet de la Escalera',
+  ],
+  [
+    'Armas matan',
+    'Subo a las paredes',
+    'Beso a la boco',
+    'Abracho',
+  ],
+]
+
 const birthdayPhotos = [
   {
     id: 1,
@@ -614,12 +635,24 @@ function App() {
       <footer className="panel celebration-footer">
         <div className="footer-copy">
           <p className="eyebrow">Cierre de la invitacion</p>
-          <h2>Una fiesta para recordar, jugar y sonreir en grande</h2>
+          <h2>Mis palabritas favoritas tambien llegan a la fiesta</h2>
           <p>
-            Spidey y sus amigos ponen la energia. Joaquin pone la chispa.
-            Pronto personalizamos este cierre con sus frases favoritas y mas
-            detalles de su personalidad.
+            Spidey y sus amigos ponen la energia. Joaquin pone la chispa, las
+            ocurrencias y las frases que hacen unica esta celebracion.
           </p>
+        </div>
+
+        <div className="sayings-banner" aria-label="Palabritas de Joaquin">
+          {sayingsRows.map((row, rowIndex) => (
+            <div
+              key={row[0]}
+              className={`sayings-track sayings-track-${rowIndex + 1}`}
+            >
+              {[...row, ...row].map((saying, itemIndex) => (
+                <span key={`${saying}-${itemIndex}`}>{saying}</span>
+              ))}
+            </div>
+          ))}
         </div>
 
         <div className="sticker-row" aria-label="Stickers tematicos de Spidey">

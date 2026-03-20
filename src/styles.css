@@ -593,7 +593,7 @@ input:disabled {
 
 .celebration-footer {
   display: grid;
-  grid-template-columns: 1fr 0.95fr;
+  grid-template-columns: 0.9fr 1.1fr;
   gap: 24px;
   margin-top: 24px;
   background:
@@ -718,11 +718,53 @@ input:disabled {
   color: rgba(16, 48, 95, 0.8);
 }
 
+.sayings-banner {
+  display: grid;
+  gap: 12px;
+  align-content: center;
+  overflow: hidden;
+}
+
+.sayings-track {
+  display: flex;
+  gap: 12px;
+  width: max-content;
+  white-space: nowrap;
+}
+
+.sayings-track span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #f3303d, #1873ff);
+  color: #fff;
+  font-family: 'Baloo 2', cursive;
+  font-size: 1.05rem;
+  letter-spacing: 0.01em;
+  box-shadow: 0 12px 24px rgba(16, 48, 95, 0.14);
+}
+
+.sayings-track-1 {
+  animation: marquee-left 22s linear infinite;
+}
+
+.sayings-track-2 {
+  animation: marquee-right 26s linear infinite;
+}
+
+.sayings-track-3 {
+  animation: marquee-left 30s linear infinite;
+}
+
 .sticker-row {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   align-items: start;
+  grid-column: 1 / -1;
 }
 
 .sticker-card {
@@ -754,6 +796,26 @@ code {
   padding: 0.15rem 0.4rem;
   border-radius: 8px;
   background: rgba(16, 48, 95, 0.08);
+}
+
+@keyframes marquee-left {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes marquee-right {
+  from {
+    transform: translateX(-50%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
 }
 
 @media (max-width: 1100px) {
@@ -794,6 +856,10 @@ code {
   .thumbnail-strip,
   .sticker-row {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .sayings-track span {
+    font-size: 0.96rem;
   }
 
   .hero-card {
@@ -850,6 +916,15 @@ code {
   .thumbnail-strip,
   .memories-grid {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .sayings-track {
+    gap: 10px;
+  }
+
+  .sayings-track span {
+    padding: 9px 14px;
+    font-size: 0.92rem;
   }
 
   .featured-photo-card,
