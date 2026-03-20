@@ -108,6 +108,7 @@ function App() {
   const [guests, setGuests] = useState([])
   const [editingId, setEditingId] = useState(null)
   const [selectedPhotoId, setSelectedPhotoId] = useState(birthdayPhotos[0].id)
+  const [lightboxPhotoId, setLightboxPhotoId] = useState(null)
   const [statusMessage, setStatusMessage] = useState(
     'Completa el formulario para registrar a tu invitado. Solo el administrador puede editar o eliminar registros.',
   )
@@ -118,6 +119,8 @@ function App() {
   const totalGuests = guests.length
   const selectedPhoto =
     birthdayPhotos.find((photo) => photo.id === selectedPhotoId) ?? birthdayPhotos[0]
+  const lightboxPhoto =
+    birthdayPhotos.find((photo) => photo.id === lightboxPhotoId) ?? null
 
   useEffect(() => {
     if (!firebaseReady || !auth) {
@@ -457,6 +460,7 @@ function App() {
               className="featured-photo"
               src={selectedPhoto.src}
               alt={selectedPhoto.alt}
+              onClick={() => setLightboxPhotoId(selectedPhoto.id)}
             />
             <div className="featured-photo-overlay">
               <p className="eyebrow">Protagonista</p>
@@ -473,7 +477,10 @@ function App() {
                 className={`thumbnail-button${
                   photo.id === selectedPhoto.id ? ' is-active' : ''
                 }`}
-                onClick={() => setSelectedPhotoId(photo.id)}
+                onClick={() => {
+                  setSelectedPhotoId(photo.id)
+                  setLightboxPhotoId(photo.id)
+                }}
                 aria-label={photo.label}
               >
                 <img src={photo.src} alt={photo.alt} />
@@ -498,6 +505,7 @@ function App() {
             <article
               key={photo.id}
               className={`memory-card memory-card-${(index % 5) + 1}`}
+              onClick={() => setLightboxPhotoId(photo.id)}
             >
               <img src={photo.src} alt={photo.alt} />
               <div className="memory-caption">
@@ -623,6 +631,51 @@ function App() {
           ))}
         </div>
       </footer>
+
+      {lightboxPhoto ? (
+        <div
+          className="photo-lightbox"
+          role="dialog"
+          aria-modal="true"
+          aria-label={lightboxPhoto.label}
+          onClick={() => setLightboxPhotoId(null)}
+        >
+          <button
+            type="button"
+            className="lightbox-close"
+            onClick={() => setLightboxPhotoId(null)}
+            aria-label="Cerrar imagen"
+          >
+            x
+          </button>
+          <div
+            className="lightbox-web lightbox-web-top-left"
+            aria-hidden="true"
+          ></div>
+          <div
+            className="lightbox-web lightbox-web-top-right"
+            aria-hidden="true"
+          ></div>
+          <div
+            className="lightbox-web lightbox-web-bottom-left"
+            aria-hidden="true"
+          ></div>
+          <div
+            className="lightbox-web lightbox-web-bottom-right"
+            aria-hidden="true"
+          ></div>
+          <article
+            className="lightbox-card"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <img src={lightboxPhoto.src} alt={lightboxPhoto.alt} />
+            <div className="lightbox-caption">
+              <strong>{lightboxPhoto.label}</strong>
+              <span>Joaquin en un recuerdo especial de su aventura.</span>
+            </div>
+          </article>
+        </div>
+      ) : null}
     </main>
   )
 }

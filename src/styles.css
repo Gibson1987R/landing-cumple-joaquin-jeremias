@@ -281,6 +281,7 @@ img {
   min-height: 420px;
   object-fit: cover;
   object-position: center 28%;
+  cursor: zoom-in;
 }
 
 .featured-photo-overlay {
@@ -366,6 +367,7 @@ img {
   border-radius: 22px;
   min-height: 170px;
   box-shadow: 0 18px 38px rgba(16, 48, 95, 0.16);
+  cursor: zoom-in;
 }
 
 .memory-card img {
@@ -598,6 +600,111 @@ input:disabled {
     linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(232, 244, 255, 0.9));
 }
 
+.photo-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(7, 24, 49, 0.82);
+  backdrop-filter: blur(10px);
+}
+
+.lightbox-card {
+  position: relative;
+  width: min(860px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: hidden;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 26px 54px rgba(0, 0, 0, 0.28);
+}
+
+.lightbox-card img {
+  width: 100%;
+  max-height: calc(100vh - 140px);
+  object-fit: contain;
+  background: #eaf4ff;
+}
+
+.lightbox-caption {
+  padding: 16px 18px 18px;
+  color: #10305f;
+}
+
+.lightbox-caption strong {
+  display: block;
+}
+
+.lightbox-caption span {
+  color: rgba(16, 48, 95, 0.76);
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 101;
+  width: 46px;
+  height: 46px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #10305f;
+  font-size: 1.5rem;
+  cursor: pointer;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.18);
+}
+
+.lightbox-web {
+  position: absolute;
+  width: 170px;
+  height: 170px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.38);
+  opacity: 0.9;
+}
+
+.lightbox-web::before,
+.lightbox-web::after {
+  content: '';
+  position: absolute;
+  inset: 50%;
+  width: 140%;
+  border-top: 3px solid rgba(255, 255, 255, 0.38);
+  transform-origin: center;
+}
+
+.lightbox-web::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.lightbox-web::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.lightbox-web-top-left {
+  top: -64px;
+  left: -64px;
+}
+
+.lightbox-web-top-right {
+  top: -64px;
+  right: -64px;
+}
+
+.lightbox-web-bottom-left {
+  bottom: -64px;
+  left: -64px;
+}
+
+.lightbox-web-bottom-right {
+  bottom: -64px;
+  right: -64px;
+}
+
 .footer-copy h2 {
   margin: 0;
   font-family: 'Baloo 2', cursive;
@@ -689,9 +796,17 @@ code {
     grid-template-columns: 1fr 1fr;
   }
 
+  .hero-card {
+    gap: 18px;
+  }
+
+  .birthday-gallery {
+    gap: 12px;
+  }
+
   .featured-photo-card,
   .featured-photo {
-    min-height: 320px;
+    min-height: 280px;
     transform: none;
   }
 
@@ -728,19 +843,28 @@ code {
   }
 
   .hero-badges,
-  .memories-grid,
-  .thumbnail-strip,
   .sticker-row {
     grid-template-columns: 1fr;
   }
 
+  .thumbnail-strip,
+  .memories-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
   .featured-photo-card,
   .featured-photo {
-    min-height: 280px;
+    min-height: 230px;
+  }
+
+  .featured-photo-card::before {
+    width: 72px;
+    height: 72px;
+    inset: 10px 10px auto auto;
   }
 
   .thumbnail-button {
-    min-height: 96px;
+    min-height: 86px;
   }
 
   body::before {
@@ -763,5 +887,25 @@ code {
   .action-button,
   .whatsapp-hero {
     width: 100%;
+  }
+
+  .photo-lightbox {
+    padding: 0;
+  }
+
+  .lightbox-card {
+    width: 100%;
+    height: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .lightbox-card img {
+    max-height: calc(100vh - 120px);
+  }
+
+  .lightbox-web {
+    width: 120px;
+    height: 120px;
   }
 }
