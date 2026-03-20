@@ -49,19 +49,19 @@ const sayingsRows = [
   [
     'Mio mi Joaquin',
     'La Guaaaan',
-    'Liht',
+    'Lihts',
     'El Spider',
   ],
   [
     'La cierra cuerta',
-    'para que',
+    'Para que',
     'Tope Tope Ton',
-    'Robet de la Escalera',
+    'Robot de la Escalera',
   ],
   [
     'Armas matan',
     'Subo a las paredes',
-    'Beso a la boco',
+    'Beso a la boca',
     'Abracho',
   ],
 ]
